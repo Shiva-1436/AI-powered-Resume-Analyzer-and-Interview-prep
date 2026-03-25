@@ -70,5 +70,48 @@ public class GeminiService {
         return feedback;
     }
 
+    public String generateInterviewQuestions(String resumeText, String jobDescription) {
+
+        RestTemplate restTemplate = new RestTemplate();
+
+        String prompt = "You are an expert technical interviewer in 2026. " +
+                "Based on the resume and job description provided, generate relevant interview questions. " +
+                "Give questions in EXACTLY this format: " +
+                "TECHNICAL QUESTIONS: (list 15  questions starting with -) " +
+                "HR QUESTIONS: (list 10 behavioral questions starting with -) " +
+                "CODING QUESTIONS: (list 10 expected coding/DSA questions starting with -) " +
+                "Job Description: " + jobDescription + " " +
+                "Resume: " + resumeText;
+
+        String cleanPrompt = prompt
+                .replace("\\", "\\\\")
+                .replace("\"", "'")
+                .replace("\r\n", " ")
+                .replace("\r", " ")
+                .replace("\n", " ")
+                .replace("\t", " ")
+                .replaceAll("[\\x00-\\x1F\\x7F]", "");
+
+        String requestBody = "{" +
+                "\"model\": \"llama-3.3-70b-versatile\"," +
+                "\"messages\": [{" +
+                "\"role\": \"user\"," +
+                "\"content\": \"" + cleanPrompt + "\"" +
+                "}]}";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("Authorization", "Bearer " + apiKey);
+
+        HttpEntity<String> entity = new HttpEntity<>(requestBody, headers);
+
+        ResponseEntity<String> response = restTemplate.postForEntity(GROQ_URL, entity, String.class);
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode root = objectMapper.readTree(response.getBody());
+        String questions = root.path("choices").get(0).path("message").path("content").asText();
+
+        return questions;
+    }
 
 }

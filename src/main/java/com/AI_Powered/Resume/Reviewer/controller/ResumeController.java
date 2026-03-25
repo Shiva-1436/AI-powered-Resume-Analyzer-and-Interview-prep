@@ -83,4 +83,30 @@ public class ResumeController {
         }
         return 0;
     }
+
+
+
+    @PostMapping("/interview-prep")
+    public ResponseEntity<String> interviewPrep(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("jobDescription") String jobDescription,
+            Authentication authentication) {
+
+        if (file.isEmpty()) {
+            return ResponseEntity.badRequest().body("Please upload a file");
+        }
+
+        String fileName = file.getOriginalFilename();
+        if (fileName == null || !fileName.endsWith(".pdf")) {
+            return ResponseEntity.badRequest().body("Only PDF files allowed");
+        }
+
+        try {
+            String questions = resumeService.generateInterviewQuestions(file, jobDescription);
+            return ResponseEntity.ok(questions);
+        } catch (Exception e) {
+            System.out.println("Error: " + e.getMessage());
+            return ResponseEntity.internalServerError().body("Failed to generate interview questions");
+        }
+    }
 }

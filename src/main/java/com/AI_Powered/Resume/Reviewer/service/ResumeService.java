@@ -25,4 +25,12 @@ public class ResumeService {
         document.close();
         return  geminiService.analyze(text,jobdescription);
     }
+
+    public String generateInterviewQuestions(MultipartFile file, String jobDescription) throws IOException {
+        PDDocument document = Loader.loadPDF(file.getBytes());
+        PDFTextStripper stripper = new PDFTextStripper();
+        String text = stripper.getText(document);
+        document.close();
+        return geminiService.generateInterviewQuestions(text, jobDescription);
+    }
 }
